@@ -4,10 +4,8 @@ using UnityEngine;
 using UnityEngine.UI;
 
 public class codeBase : MonoBehaviour {
-
     public const int ThetaInitValue = 0;
     public const int PhiInitValue = 0;
-
 
     public float thetaValue = ThetaInitValue;
     public float phiValue = PhiInitValue;
@@ -45,6 +43,12 @@ public class codeBase : MonoBehaviour {
         thetaSlider.onValueChanged.AddListener(delegate { thetaSliderChanged(); });
         phiSlider.onValueChanged.AddListener(delegate { phiSliderChanged(); });
 
+        //Sets listeners on the input box
+        thetaInput.onValueChanged.AddListener(delegate { thetaInputChanged(); });
+        thetaInput.onEndEdit.AddListener(delegate { checkEndEditThetaValue(); });
+        phiInput.onValueChanged.AddListener(delegate { phiInputChanged(); });
+        phiInput.onEndEdit.AddListener(delegate { checkEndEditPhiValue(); });
+
         //Sets listeners on gates buttons
         PaulyXGate.onClick.AddListener(delegate { setPaulyXGateTransform(); });
         PaulyYGate.onClick.AddListener(delegate { setPaulyYGateTransform(); });
@@ -53,7 +57,6 @@ public class codeBase : MonoBehaviour {
 
         //Sets listener on the reset button
         ResetStateButton.onClick.AddListener(delegate { resetQuBitState(); });
-
     }
 
     //Initializes field values 
@@ -74,29 +77,52 @@ public class codeBase : MonoBehaviour {
 		
 	}
     
+    //Apply X Pauli gate on the quantum Bit
     void setPaulyXGateTransform()
     {
         thetaSlider.value = 180 - thetaSlider.value;
-        //phiSlider.value = (180 + phiSlider.value)%360;
+        phiSlider.value = (360 + 180 - phiSlider.value) % 360;
+        thetaSliderChanged();
+        phiSliderChanged();
+    }
 
+    //Apply Y Pauli gate on the quantum Bit
+    void setPaulyYGateTransform()
+    {
+        thetaSlider.value = 180 - thetaSlider.value;
         phiSlider.value = 360 - phiSlider.value;
         thetaSliderChanged();
         phiSliderChanged();
     }
 
-    void setPaulyYGateTransform()
-    {
-
-    }
-
+    //Apply Z Pauli gate on the quantum Bit
     void setPaulyZGateTransform()
     {
-
+        phiSlider.value = (180 + phiSlider.value) % 360;
+        phiSliderChanged();
     }
 
     void setHadamardGateTransform()
     {
+        //thetaSlider.value = 180 - thetaSlider.value;
+        //phiSlider.value = (360 + 180 - phiSlider.value) % 360;
 
+        //if (thetaSlider.value <= 90 && phiSlider.value <= 180)
+        //{
+        //    phiSlider.value = 360 - phiSlider.value;
+        //}else if (thetaSlider.value <= 90 && phiSlider.value > 180)
+        //{
+        //    thetaSlider.value = 180 - thetaSlider.value;
+        //}else if (thetaSlider.value > 90 && phiSlider.value <= 180)
+        //{
+        //    thetaSlider.value = 180 - thetaSlider.value;
+        //}
+        //else
+        //{
+        //    phiSlider.value = 360 - phiSlider.value;
+        //}
+        //thetaSliderChanged();
+        //phiSliderChanged();
     }
 
     private void resetQuBitState()
@@ -104,6 +130,18 @@ public class codeBase : MonoBehaviour {
         initializeValues();
     }
 
+    private bool tryParseIntValues(InputField field)
+    {
+        if (!thetaInput.text.Equals(""))
+        {
+            int num;
+            if (int.TryParse(thetaInput.text, out num))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
 
     void thetaSliderChanged()
     {
@@ -113,6 +151,47 @@ public class codeBase : MonoBehaviour {
         updateQBitVector();
     }
 
+    void thetaInputChanged()
+    {
+        if (tryParseIntValues(thetaInput))
+        {
+            Debug.Log(thetaInput.text);
+            thetaSlider.value = int.Parse(thetaInput.text);
+            thetaValue = thetaSlider.value;
+            updateQBitVector();
+        }
+    }
+
+    void phiInputChanged()
+    {
+        if (tryParseIntValues(phiInput))
+        {
+            Debug.Log(phiInput.text);
+            phiSlider.value = int.Parse(phiInput.text);
+            phiValue = phiSlider.value;
+            updateQBitVector();
+        }
+    }
+
+    void checkEndEditThetaValue()
+    {
+        if (thetaInput.text.Equals(""))
+        {
+            thetaInput.text = thetaSlider.value.ToString();
+            thetaValue = thetaSlider.value;
+            updateQBitVector();
+        }
+    }
+
+    void checkEndEditPhiValue()
+    {
+        if (phiInput.text.Equals(""))
+        {
+            phiInput.text = phiSlider.value.ToString();
+            phiValue = phiSlider.value;
+            updateQBitVector();
+        }
+    }
 
     void phiSliderChanged()
     {
@@ -125,8 +204,6 @@ public class codeBase : MonoBehaviour {
     void updateQBitVector()
     {
         qBitArrow.transform.rotation = Quaternion.Euler(this.thetaValue, this.phiValue, 0);
-        //qBitArrow.transform.rotation = Quaternion.LookRotation(new Vector3(getZValue(), getYValue(), getXValue()));
-        //Debug.Log("X:" + getXValue() + "--- Y:" + getYValue() + "--- Z:" + getZValue());
     }
 
     //return the X value of the direction vector
@@ -146,5 +223,4 @@ public class codeBase : MonoBehaviour {
     {
         return Mathf.Cos(thetaValue * Mathf.PI / 180 /2);
     }
-
 }
